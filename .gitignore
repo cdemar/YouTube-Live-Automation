@@ -1,0 +1,21 @@
+# Secrets — never commit these
+client_secrets.json
+credentials.json
+credentials_for_lambda.json
+stream_ids.json
+
+# Local Python virtual environments
+venv/
+create/
+\#/
+
+# Build artifacts — regenerate with the Rebuild & deploy steps in OPERATIONS.md
+build/
+lambda_package.zip
+
+# OS junk
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc

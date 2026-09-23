@@ -1,5 +1,7 @@
 # YouTube Live Automation
 
+[![Tests](https://github.com/cdemar/YouTube-Live-Automation/actions/workflows/tests.yml/badge.svg)](https://github.com/cdemar/YouTube-Live-Automation/actions/workflows/tests.yml)
+
 An AWS Lambda function that automates weekly YouTube Live operations for a multi-campus,
 multi-language church — built for and running in production at San Jose Christian Alliance
 Church (SJCAC), open-sourced in case it's useful to anyone running a similar setup.
@@ -49,8 +51,17 @@ EventBridge (weekly cron)
 | `setup_credentials.py` | Run locally, once per Google account, to generate OAuth refresh tokens and persistent stream IDs |
 | `apps_script/` | The Google Apps Script files for the optional attendance-Sheet integration (these live and run inside a Google Sheet, not on AWS — see below) |
 | `thumbnails/` | Example thumbnail images |
+| `tests/` | Pytest unit tests for `handler.py` — 100% line coverage, nothing hits a real API (see "Automated tests" in `OPERATIONS.md`) |
 | `OPERATIONS.md` | The full internal runbook — every environment variable, every manual test payload, deployment steps, troubleshooting. Start here if you're adapting this for your own use |
 | `LICENSE` | MIT |
+
+## Running the tests
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest
+```
 
 ## Requirements to run your own copy
 

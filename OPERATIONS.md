@@ -120,6 +120,32 @@ Invoke from Lambda console → Test tab:
 | `{"dry_run": true}` | Full run, no YouTube writes, no email, no sheet sync — safe anytime |
 Response body includes `viewer_report.{success,errors}`, `event_creation.{success,errors}`, `email_sent`, and `sheet_sync` (the sheet sync result dict, or `null` if skipped).
 
+### Automated tests
+
+`tests/` holds a `pytest` unit test suite for `handler.py` — 83 tests, 100% line coverage. Nothing in it talks to real AWS or Google APIs; every external call (YouTube Data/Analytics, S3, SES, the Sheet's webhook) is mocked at the boundary with `unittest.mock`, and `freezegun` pins "today" for the date-math tests instead of relying on whatever day it happens to be when the suite runs.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+pytest                          # add --cov=handler --cov-report=term-missing for a coverage report
+```
+
+What's covered, roughly by file:
+
+| File | Covers |
+|---|---|
+| `test_date_helpers.py` | `get_last_sunday`/`get_next_sunday` (property-based across every weekday, plus exact-value cases), `make_stream_datetime` (including the March 2026 DST boundary), `format_date` |
+| `test_credentials.py` | `get_refresh_token`, `get_youtube_client` |
+| `test_thumbnail_and_playlist.py` | `upload_thumbnail`, `add_to_playlist` |
+| `test_viewer_report.py` | `get_last_completed_broadcast`, `get_max_concurrent_viewers` (the Videos-API-then-Analytics-fallback logic), `fetch_viewer_stats` |
+| `test_event_creator.py` | `create_live_event`, `schedule_next_event` — including that `dry_run=True` never touches the YouTube API at all |
+| `test_email.py` | `build_email`, `send_email` |
+| `test_sheet_sync.py` | `send_to_sheet` |
+| `test_lambda_handler.py` | `lambda_handler`'s orchestration only (which mode/channel/dry_run combination calls what) — the worker functions it calls are mocked out, since their real behavior is covered elsewhere |
+
+One real gap this suite found, documented rather than silently worked around: `send_email()` degrades gracefully for every SES failure (`except ClientError`), but a missing `SES_FROM_EMAIL`/`SES_TO_EMAIL` env var raises an uncaught `KeyError` instead — inconsistent with how every other function in this file handles a missing env var. See `test_missing_recipient_env_vars_raises_keyerror_uncaught` in `tests/test_email.py`.
+
 ### Rebuild & deploy
 
 ```bash
